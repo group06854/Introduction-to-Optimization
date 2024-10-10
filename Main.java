@@ -1,83 +1,151 @@
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
-class Simplex{
-    double[] co_ob;//coefficient of objective function
-    ArrayList<double[]> matrix;//coefficient of inequalities function
-    double[] sol;//vector of solution
-    int approx;//Approximation accuracy
-    double[][] table;//table with solution and coefficient
-    public void show_table_st() {
-        String string;
-        System.out.print("Maximize z =");
-        for (int i = 0; i < co_ob.length; i++) {
-            string = Integer.toString(i+1);
-            System.out.print(" + " + co_ob[i] + " * " + "x" + string );
-            if (i == co_ob.length - 1) {
-                System.out.print("\n");
-            }
-        }
-        System.out.println("subject to the constraints:");
-        for (int i=0;i< matrix.size();i++){
-            for (int j=0;j<matrix.get(i).length;j++){
-                string = Integer.toString(j+1);
-                if (j!=0) {
-                    System.out.print( " + " + matrix.get(i)[j] + " * " + "x" + string);
-                }else{
-                    System.out.print(+ matrix.get(i)[j] + " * " + "x" + string);
-
-                }
-            }
-            System.out.println(" <= " + sol[i+1]);
-        }
-
-    }//outputs inequalities and the z function
-    public void get_data(){
-        Scanner sc = new Scanner(System.in);
-        String[] str = sc.nextLine().split(" ");
-        int co_len = str.length;
-        co_ob = new double[co_len];
-        for (int i = 0; i < co_len; i++) {
-            co_ob[i] = Double.parseDouble(str[i]);
-        }
-        int len_col = co_ob.length;
-        str = sc.nextLine().split(" ");
-        double[] mat_row = new double[len_col];
-        matrix = new ArrayList<>();
-        while (str.length == len_col){
-            mat_row = new double[len_col];
-            for (int i=0;i<len_col;i++){
-                mat_row[i]=0;
-                mat_row[i] = Double.parseDouble(str[i]);
-            }
-            matrix.add(mat_row);
-            str = sc.nextLine().split(" ");
-        }
-
-        if (str.length == matrix.size()){
-            sol = new double[str.length];
-            for (int i=0; i< str.length;i++){
-                sol[i] = Double.parseDouble(str[i]);
-            }
-            str = sc.nextLine().split(" ");
-            approx = countDecimalPlaces(str[0]);
-        }else{
-            sol = new double[mat_row.length];
-            System.arraycopy(mat_row, 0, sol, 0, len_col);
-            matrix.remove(matrix.size()-1);
-            approx = countDecimalPlaces(str[0]);
-        }
-    }//we get the data to fill in the table
-    public int countDecimalPlaces(String number) {
-        String[] parts = number.split("\\.");
-        if (parts.length == 2 && !parts[1].isEmpty()) {
-            return parts[1].length();
-        }
-        return 0;
-    }//counting the number of decimal places
-}
 public class Main {
-    public static void main(String[] args) {
+  public static void main(String[] args) {}
 
+  static class SimplexMethod {
+    static class SimplexTable {
+      static class Row {
+        ArrayList<Double> coefs;
+        double result;
+
+        Row(List<Double> coefficients, double result) {
+          this.coefs = new ArrayList<>(coefficients);
+          this.result = result;
+        }
+
+        Row(List<Double> coefficients) {
+          this(coefficients, 0);
+        }
+
+        Row(Row other) {
+          this(other.coefs, other.result);
+        }
+
+        void extendWithNVariables(int number) {
+          coefs.ensureCapacity(coefs.size() + number);
+          for (int i = coefs.size(); i < coefs.size() + number; ++i) {
+            coefs.add(0d);
+          }
+        }
+
+        void plus(double coef, Row other) {
+          for (int i = 0; i < coefs.size(); ++i) {
+            coefs.set(i, coefs.get(i) + coef * other.coefs.get(i));
+          }
+          result = coef * other.result;
+        }
+
+        void multiplyBy(double coef) {
+          for (int i = 0; i < coefs.size(); ++i) {
+            coefs.set(i, coef * coefs.get(i));
+          }
+        }
+      }
+
+      Row z;
+      ArrayList<Row> ineqs = new ArrayList<>();
+
+      private SimplexTable() {}
+
+      /**
+       * Find the least negative coefficient in the objective function. If none was found, its
+       * result is considered as the solution.
+       *
+       * @return Index of the coefficient if found, -1 otherwise.
+       */
+      int leastNegativeIndex() {
+        int index = -1;
+        double least = 0d;
+        for (int i = 0; i < z.coefs.size(); ++i) {
+          double coef = z.coefs.get(i);
+          if (coef < least) {
+            index = i;
+            least = coef;
+          }
+        }
+        return index;
+      }
     }
+
+    static final double EPS = 0.000001d;
+
+    int precision;
+    Double[] objectiveFunction;
+    SimplexTable table = new SimplexTable();
+
+    Double maximize() {
+      // TODO: implement simplex maximization
+      return 0d;
+    }
+
+    static SimplexMethod parseStream(InputStream stream) {
+      Scanner input = new Scanner(stream);
+      SimplexMethod method = new SimplexMethod();
+      method.objectiveFunction =
+          Arrays.stream(input.nextLine().strip().split(" "))
+              .map(it -> Double.parseDouble(it))
+              .toArray(Double[]::new);
+      ArrayList<Double> row;
+      ArrayList<Double> nextRow =
+          Arrays.stream(input.nextLine().strip().split(" "))
+              .map(it -> Double.parseDouble(it))
+              .collect(Collectors.toCollection(ArrayList::new));
+      while (true) {
+        row = nextRow;
+        nextRow =
+            Arrays.stream(input.nextLine().strip().split(" "))
+                .map(it -> Double.parseDouble(it))
+                .collect(Collectors.toCollection(ArrayList::new));
+        if (nextRow.size() <= 1) {
+          input.close();
+          if (nextRow.size() == 0) {
+            throw new IllegalArgumentException("no epsilon was provided");
+          }
+          int ineqNumber = method.table.ineqs.size();
+          if (row.size() < ineqNumber) {
+            throw new IllegalArgumentException("not enough results");
+          }
+          method.table.z.extendWithNVariables(ineqNumber);
+          for (int i = 0; i < ineqNumber; ++i) {
+            SimplexTable.Row ineq = method.table.ineqs.get(i);
+            ineq.extendWithNVariables(ineqNumber);
+            ineq.result = row.get(i);
+          }
+          method.precision = nextRow.get(0).intValue();
+          return method;
+        } else if (nextRow.size() != method.objectiveFunction.length) {
+          input.close();
+          throw new IllegalArgumentException(
+              "wrong inequality, does not match the number of variables in objective function");
+        }
+        method.table.ineqs.add(new SimplexTable.Row(row));
+      }
+    }
+
+    @Override
+    public String toString() {
+      String string = "z =";
+      for (int i = 0; i < objectiveFunction.length; ++i) {
+        string += objectiveFunction[i] + EPS >= 0 ? (i == 0 ? " " : " + ") : " - ";
+        string += ("%." + precision + "fx%d").formatted(Math.abs(objectiveFunction[i]), i + 1);
+      }
+      string += "\n";
+      System.out.println("Constraints:\n");
+      for (SimplexTable.Row ineq : table.ineqs) {
+        for (int i = 0; i < ineq.coefs.size(); ++i) {
+          string += ineq.coefs.get(i) + EPS >= 0 ? (i == 0 ? "" : "+ ") : "- ";
+          string += ("%." + precision + "fx%d").formatted(Math.abs(ineq.coefs.get(i)), i + 1);
+        }
+        string += "<= %." + precision + "f".formatted(ineq.result);
+        string += "\n";
+      }
+      return string;
+    }
+  }
 }
