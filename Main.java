@@ -31,7 +31,7 @@ class Simplex{
             System.out.println(" <= " + sol[i+1]);
         }
 
-    }
+    }//outputs inequalities and the z function
     public void get_data(){
         Scanner sc = new Scanner(System.in);
         String[] str = sc.nextLine().split(" ");
@@ -67,17 +67,17 @@ class Simplex{
             matrix.remove(matrix.size()-1);
             approx = countDecimalPlaces(str[0]);
         }
-    }
+    }//we get the data to fill in the table
     public int countDecimalPlaces(String number) {
         String[] parts = number.split("\\.");
         if (parts.length == 2 && !parts[1].isEmpty()) {
             return parts[1].length();
         }
         return 0;
-    }
+    }//counting the number of decimal places
 }
 public class Main {
     public static void main(String[] args) {
-        
+
     }
 }
