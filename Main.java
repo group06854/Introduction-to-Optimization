@@ -1,13 +1,19 @@
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 
 public class Main {
     public static void main(String[] args) {
-        SimplexMethod method = SimplexMethod.parseStream(System.in);
-        method.maximize();
+        try {
+            SimplexMethod method = SimplexMethod.parseStream(System.in);
+            method.maximize();
+        } catch (Exception error) {
+            System.out.println("The method is not applicable!");
+        }
     }
-
 }
 
 class SimplexMethod {
@@ -57,12 +63,13 @@ class SimplexMethod {
                     string.append(coef);
                     string.append(" ");
                 }
+                string.append(result);
                 return string.toString();
             }
         }
 
         Row z;
-        HashMap<Integer, Row> ineqs = new HashMap<>();
+        ArrayList<Row> ineqs = new ArrayList<>();
 
         private SimplexTable() {
         }
@@ -86,11 +93,12 @@ class SimplexMethod {
             return index;
         }
         Row getRow(int index) {
-            return ineqs.get(index);
-        }
-        void changeBasicIndex(int basicLeave, int basicEnter) {
-            ineqs.put(basicEnter, ineqs.get(basicLeave));
-            ineqs.remove(basicLeave);
+            for (Row row : ineqs) {
+                if (row.basicIndex == index) {
+                    return row;
+                }
+            }
+            return null;
         }
     }
 
@@ -100,15 +108,13 @@ class SimplexMethod {
     Double[] objectiveFunction;
     SimplexTable table = new SimplexTable();
 
-    Double maximize() {
-        // TODO: implement simplex maximization
+    void maximize() {
         table.z.multiplyBy(-1d);
-//      System.out.println(method.table.z.toString());
         int basicEnter = table.leastNegativeIndex();
         while (basicEnter != -1) {
             int basicLeaves = -1;
             double minPositiveRatio = Double.MAX_VALUE;
-            for (SimplexTable.Row row : table.ineqs.values()) {
+            for (SimplexTable.Row row : table.ineqs) {
                 double ratio = row.result / row.get(basicEnter);
                 if (ratio > 0 && ratio < minPositiveRatio) {
                     minPositiveRatio = ratio;
@@ -116,15 +122,15 @@ class SimplexMethod {
                 }
             }
             if (basicLeaves == -1) {
-                throw new IllegalArgumentException("no valid ratio found"); // TODO: ask children
+                throw new IllegalArgumentException("no valid ratio found - unbounded");
             }
-
 
             double crossNumber = table.getRow(basicLeaves).get(basicEnter);
             table.getRow(basicLeaves).multiplyBy(1/crossNumber);
+            table.getRow(basicLeaves).result /= crossNumber;
 
             table.z.set(basicLeaves, -table.z.get(basicEnter)/crossNumber);
-            for (SimplexTable.Row row : table.ineqs.values()) {
+            for (SimplexTable.Row row : table.ineqs) {
                 if (row.basicIndex != basicLeaves) {
                     row.set(basicLeaves, -row.get(basicEnter)/crossNumber);
                 }
@@ -132,32 +138,42 @@ class SimplexMethod {
 
             for (int i = 0; i < table.z.coefs.size(); i++) {
                 if (i != basicLeaves) {
-                    table.z.set(i, table.getRow(basicLeaves).get(i) * table.z.get(basicLeaves) + table.z.get(i));
+                    table.z.set(i, table.getRow(basicLeaves).get(i) * crossNumber * table.z.get(basicLeaves) + table.z.get(i));
                 }
             }
-            table.z.result = table.getRow(basicLeaves).result * table.z.get(basicLeaves) + table.z.result;
-            for (SimplexTable.Row row : table.ineqs.values()) {
+            table.z.result = table.getRow(basicLeaves).result * crossNumber * table.z.get(basicLeaves) + table.z.result;
+            for (SimplexTable.Row row : table.ineqs) {
                 if (row.basicIndex != basicLeaves) {
                     for (int i = 0; i < row.coefs.size(); i++) {
                         if (i != basicLeaves) {
-                            row.set(i, table.getRow(basicLeaves).get(i) * row.get(basicLeaves) + row.get(i));
+                            row.set(i, table.getRow(basicLeaves).get(i) * crossNumber * row.get(basicLeaves) + row.get(i));
                         }
                     }
-                    row.result = table.getRow(basicLeaves).result * row.get(basicLeaves) + row.result;
+                    row.result = table.getRow(basicLeaves).result * crossNumber * row.get(basicLeaves) + row.result;
                 }
             }
 
-            System.out.println(888);
+
 
             table.getRow(basicLeaves).basicIndex = basicEnter;
             basicEnter = table.leastNegativeIndex();
         }
-        for (SimplexTable.Row row : table.ineqs.values()) {
-            System.out.printf("x%d = %f\n", row.basicIndex + 1, row.result);
+        StringBuilder string = new StringBuilder();
+        for (int i = 0; i < objectiveFunction.length; i++) {
+            SimplexTable.Row row = table.getRow(i);
+            if (row != null) {
+                string.append(("%." + precision + "f").formatted(row.result));
+            } else {
+                string.append(("%." + precision + "f").formatted(0d));
+            }
+            string.append(" ");
+//            for (SimplexTable.Row row : table.ineqs) {
+//                System.out.printf("x%d = %f\n", row.basicIndex + 1, row.result);
+//            }
         }
-
-
-        return 0d;
+        string.append("\n");
+        string.append(("%." + precision + "f").formatted(table.z.result));
+        System.out.println(string);
     }
 
 
@@ -173,7 +189,6 @@ class SimplexMethod {
                 Arrays.stream(input.nextLine().strip().split(" "))
                         .map(Double::parseDouble)
                         .collect(Collectors.toCollection(ArrayList::new));
-        int index = 0;
         while (true) {
             row = nextRow;
             nextRow =
@@ -195,10 +210,7 @@ class SimplexMethod {
                     SimplexTable.Row ineq = method.table.ineqs.get(i);
                     ineq.extendWithNVariables(varNumber);
                     ineq.coefs.set(varNumber + i, 1d);
-                    method.table.changeBasicIndex(i, varNumber + i + 1);
-                    System.out.println(ineq.basicIndex);
-                    System.out.println(varNumber + i + 1);
-                    ineq.basicIndex = varNumber + i + 1;
+                    ineq.basicIndex = varNumber + i;
                     ineq.result = row.get(i);
                 }
                 method.precision = nextRow.get(0).intValue();
@@ -206,9 +218,9 @@ class SimplexMethod {
             } else if (nextRow.size() != method.objectiveFunction.length) {
                 input.close();
                 throw new IllegalArgumentException(
-                        "wrong inequality, does not match the number of variables in objective function");
+                        "wrong inequality, does not match the number of variables in objective function - redundancy");
             }
-            method.table.ineqs.put(index++, new SimplexTable.Row(row));
+            method.table.ineqs.add(new SimplexTable.Row(row));
         }
     }
 
@@ -220,7 +232,7 @@ class SimplexMethod {
             string.append(("%." + precision + "fx%d").formatted(Math.abs(objectiveFunction[i]), i + 1));
         }
         string.append("\nConstraints:\n");
-        for (SimplexTable.Row ineq : table.ineqs.values()) {
+        for (SimplexTable.Row ineq : table.ineqs) {
             for (int i = 0; i < ineq.coefs.size(); ++i) {
                 string.append(ineq.coefs.get(i) + EPS >= 0 ? (i == 0 ? "" : "+ ") : "- ");
                 string.append(("%." + precision + "fx%d ").formatted(Math.abs(ineq.coefs.get(i)), i + 1));
