@@ -157,6 +157,10 @@ class SimplexMethod {
 
             table.getRow(basicLeaves).basicIndex = basicEnter;
             basicEnter = table.leastNegativeIndex();
+//            for (SimplexTable.Row row : table.ineqs) {
+//                System.out.println(row + " " + row.result);
+//            }
+//            System.out.println(table.z + " " + table.z.result);
         }
         StringBuilder string = new StringBuilder();
         for (int i = 0; i < objectiveFunction.length; i++) {
