@@ -38,25 +38,32 @@ for n in range(1, 6):
     x = np.array([float(j) for j in data[-3].split()], float)
     b = np.array([float(j) for j in data[-2].split()], float)
     eps = float(data[-1])
+    print(f"Input №{n}")
+    print()
+
     try:
-        print(f"Input №{n}")
-        print()
-
-        print("alpha = 0.5:")
+        print("Interior-point Algorithm:")
         result = interior_point_algorithm(c, A, x, eps, 0.5)
+        print("alpha = 0.5:")
         print(f"\tx = {result[0]}")
         print(f"\tMaximum value f(x) = {result[1]}")
-
-        print("alpha = 0.9:")
-        result = interior_point_algorithm(c, A, x, eps, 0.9)
-        print(f"\tx = {result[0]}")
-        print(f"\tMaximum value f(x) = {result[1]}")
-
-        # print("Simplex Method:")
-        # result = simplex(c, A, b, eps)
-        # print(f"\tx = {result[0]}")
-        # print(f"\tMaximum value f(x) = {result[1]}")
-
-        print("\n")
     except Exception:
         print("The method is not applicable!")
+
+    try:
+        result = interior_point_algorithm(c, A, x, eps, 0.9)
+        print("alpha = 0.9:")
+        print(f"\tx = {result[0]}")
+        print(f"\tMaximum value f(x) = {result[1]}")
+    except Exception:
+        print("The method is not applicable!")
+
+    # try:
+    #     result = simplex(c, A, b, eps)
+    #     print("Simplex Method:")
+    #     print(f"\tx = {result[0]}")
+    #     print(f"\tMaximum value f(x) = {result[1]}")
+    # except Exception:
+    #     print("The method is not applicable!")
+    
+    print("\n")
