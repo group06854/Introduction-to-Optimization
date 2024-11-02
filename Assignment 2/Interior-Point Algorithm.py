@@ -1,5 +1,6 @@
 import numpy as np
 from numpy.linalg import norm
+from numpy.typing import NDArray
 
 
 def interior_point_algorithm(c, A, x, eps, alpha):
@@ -28,7 +29,40 @@ def interior_point_algorithm(c, A, x, eps, alpha):
     return x[:np.count_nonzero(c)], max_value_f
 
 
-# def simplex(c, A, b):
+def simplex(c: NDArray, A: NDArray, b: NDArray, eps: float):
+    decision_vars = int(c.nonzero()[0][-1]) + 1
+    if (A[:,-A.shape[0]:] != np.eye(A.shape[0])).any() \
+        or A.shape[1] - A.shape[0] != decision_vars:
+        raise Exception("cannot find basic variables")
+    def argmin_mask(a: NDArray, mask: NDArray):
+        masked = a[mask]
+        if masked.size == 0:
+            return -1
+        masked_min = masked.argmin()
+        return int(np.arange(a.size)[mask.flatten()][masked_min])
+    z = np.append(c * (-1), [0])
+    table = np.c_[A, b]
+    basics = list([decision_vars + i for i in range(A.shape[0])])
+    while (z[:-1] < 0 - eps).any():
+        enters = argmin_mask(z[:-1], (z[:-1] < 0 - eps))
+        ratio = np.divide(table[:,-1], table[:,enters],
+                          out=np.zeros_like(table[:,-1]),
+                          where=table[:,enters] != 0)
+        leaves = argmin_mask(ratio, ratio > 0 + eps)
+        if leaves == -1:
+            raise Exception("Unbounded")
+        basics[leaves] = enters
+        table[leaves,:] = table[leaves,:] / table[leaves,enters]
+        z -= table[leaves,:] * z[enters]
+        for i in range(table.shape[0]):
+            if (i == leaves):
+                continue
+            table[i,:] -= table[leaves,:] * table[i,enters]
+    x = np.zeros((decision_vars))
+    for row, basic in enumerate(basics):
+        if basic < decision_vars:
+            x[basic] = table[row,-1]
+    return x, z[-1]
 
 for n in range(1, 6):
     data = open(f"tests/input{n}.txt", "r").readlines()
@@ -60,11 +94,13 @@ for n in range(1, 6):
     except Exception:
         print("The method is not applicable!")
 
-    # try:
-    #     print("Simplex Method:")
-    #     result = simplex(c, A, b, eps)
-    #     print(f"x = {np.round(result, decimals=rounding)}")
-    # except Exception:
-    #     print("The method is not applicable!")
+    try:
+        print()
+        print("Simplex Method:")
+        result = simplex(c, A, b, eps)
+        print(f"\tx = {np.round(result[0], decimals=rounding)}")
+        print(f"\tMaximum value f(x) = {np.round(result[1], decimals=rounding)}")
+    except Exception:
+        print("The method is not applicable!")
 
     print("\n")
