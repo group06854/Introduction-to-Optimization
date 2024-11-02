@@ -25,7 +25,7 @@ def interior_point_algorithm(c, A, x, eps, alpha):
         if norm(np.subtract(yy, v), ord=2) < eps:
             break
     max_value_f = np.dot(c, x)
-    return x, max_value_f
+    return x[:np.count_nonzero(c)], max_value_f
 
 
 # def simplex(c, A, b):
