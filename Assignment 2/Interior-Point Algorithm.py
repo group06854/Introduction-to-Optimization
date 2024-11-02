@@ -38,6 +38,8 @@ for n in range(1, 6):
     x = np.array([float(j) for j in data[-3].split()], float)
     b = np.array([float(j) for j in data[-2].split()], float)
     eps = float(data[-1])
+    rounding = len(data[-1]) - 2
+
     print(f"Input №{n}")
     print()
 
@@ -45,24 +47,24 @@ for n in range(1, 6):
         print("Interior-point Algorithm:")
         print("alpha = 0.5:")
         result = interior_point_algorithm(c, A, x, eps, 0.5)
-        print(f"\tx = {result[0]}")
-        print(f"\tMaximum value f(x) = {result[1]}")
+        print(f"\tx = {np.round(result[0], decimals=rounding)}")
+        print(f"\tMaximum value f(x) = {np.round(result[1], decimals=rounding)}")
     except Exception:
         print("The method is not applicable!")
 
     try:
         print("alpha = 0.9:")
         result = interior_point_algorithm(c, A, x, eps, 0.9)
-        print(f"\tx = {result[0]}")
-        print(f"\tMaximum value f(x) = {result[1]}")
+        print(f"\tx = {np.round(result[0], decimals=rounding)}")
+        print(f"\tMaximum value f(x) = {np.round(result[1], decimals=rounding)}")
     except Exception:
         print("The method is not applicable!")
 
     # try:
     #     print("Simplex Method:")
     #     result = simplex(c, A, b, eps)
-    #     print(f"x = {result}")
+    #     print(f"x = {np.round(result, decimals=rounding)}")
     # except Exception:
     #     print("The method is not applicable!")
-    
+
     print("\n")
