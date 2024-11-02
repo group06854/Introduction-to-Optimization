@@ -43,26 +43,25 @@ for n in range(1, 6):
 
     try:
         print("Interior-point Algorithm:")
-        result = interior_point_algorithm(c, A, x, eps, 0.5)
         print("alpha = 0.5:")
+        result = interior_point_algorithm(c, A, x, eps, 0.5)
         print(f"\tx = {result[0]}")
         print(f"\tMaximum value f(x) = {result[1]}")
     except Exception:
         print("The method is not applicable!")
 
     try:
-        result = interior_point_algorithm(c, A, x, eps, 0.9)
         print("alpha = 0.9:")
+        result = interior_point_algorithm(c, A, x, eps, 0.9)
         print(f"\tx = {result[0]}")
         print(f"\tMaximum value f(x) = {result[1]}")
     except Exception:
         print("The method is not applicable!")
 
     # try:
-    #     result = simplex(c, A, b, eps)
     #     print("Simplex Method:")
-    #     print(f"\tx = {result[0]}")
-    #     print(f"\tMaximum value f(x) = {result[1]}")
+    #     result = simplex(c, A, b, eps)
+    #     print(f"x = {result}")
     # except Exception:
     #     print("The method is not applicable!")
     
