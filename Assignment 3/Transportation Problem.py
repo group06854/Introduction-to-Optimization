@@ -7,6 +7,7 @@ def north_west_approximation(S, C, D):
     costs = C.copy()
     demand = D.copy()
     allocation = np.zeros_like(costs, dtype=float)
+    total = 0
 
     # Check if the method is applicable (no negative values)
     if not check_non_negative(supply, demand, costs):
@@ -24,6 +25,7 @@ def north_west_approximation(S, C, D):
         supply[i_s] -= min_val
         demand[i_d] -= min_val
         allocation[i_s,i_d] += min_val
+        total += costs[i_s,i_d] * min_val
         if supply[i_s] == demand[i_d]:
             i_s += 1
             i_d += 1
@@ -31,7 +33,7 @@ def north_west_approximation(S, C, D):
             i_s += 1
         else:
             i_d += 1
-    return allocation
+    return allocation, total
 
 def check_balance(supply, demand):
     """
@@ -144,6 +146,7 @@ def vogel_approximation(S, C, D):
     demand = D.copy()
     cost_matrix = C.copy()
     allocation = np.zeros_like(cost_matrix, dtype=float)
+    total = 0
 
     # Check if the method is applicable (no negative values)
     if not check_non_negative(supply, demand, cost_matrix):
@@ -170,9 +173,10 @@ def vogel_approximation(S, C, D):
             i, j, min_val = allocate_supply_demand(supply, demand, cost_matrix, active_rows, active_cols, -1, index)
 
         allocation[i, j] = min_val
+        total += cost_matrix[i, j] * min_val
         update_active_status(supply, demand, i, j, active_rows, active_cols)
 
-    return allocation
+    return allocation, total
 
 
 def largest_costs_in_rows(cost_matrix, active_rows, active_cols):
@@ -221,6 +225,7 @@ def russel_approximation(S, C, D):
     demand = D.copy()
     cost_matrix = C.copy()
     allocation = np.zeros_like(cost_matrix, dtype=float)
+    total = 0
 
     # Check if the method is applicable (no negative values)
     if not check_non_negative(supply, demand, cost_matrix):
@@ -243,11 +248,12 @@ def russel_approximation(S, C, D):
         i, j = find_min_number(reduced_cost)
         alloc = min(supply[i], demand[j])
         allocation[i, j] = alloc
+        total += cost_matrix[i, j] * alloc
         supply[i] -= alloc
         demand[j] -= alloc
         update_active_status(supply, demand, i, j, active_rows, active_cols)
 
-    return allocation
+    return allocation, total
 
 
 
@@ -274,36 +280,39 @@ for n in range(1, 4):
     try:
         print("\nNorth-West Corner Approximation:")
         # Run the function and get the allocation matrix
-        allocation = north_west_approximation(S, C, D)
+        allocation, total = north_west_approximation(S, C, D)
 
         # Print the final allocation matrix
         allocation_df = pd.DataFrame(allocation, columns=[f'Demand {i + 1}' for i in range(len(D))],
                                      index=[f'Supply {i + 1}' for i in range(len(S))])
         print(allocation_df)
+        print(f'Total cost: {total}')
     except Exception:
         pass
 
     try:
         print("\nVogel Approximation:")
         # Run the function and get the allocation matrix
-        allocation = vogel_approximation(S, C, D)
+        allocation, total = vogel_approximation(S, C, D)
 
         # Print the final allocation matrix
         allocation_df = pd.DataFrame(allocation, columns=[f'Demand {i + 1}' for i in range(len(D))],
                                      index=[f'Supply {i + 1}' for i in range(len(S))])
         print(allocation_df)
+        print(f'Total cost: {total}')
     except Exception:
         pass
 
     try:
         print("\nRussel Approximation:")
         # Run the function and get the allocation matrix
-        allocation = russel_approximation(S, C, D)
+        allocation, total = russel_approximation(S, C, D)
 
         # Print the final allocation matrix
         allocation_df = pd.DataFrame(allocation, columns=[f'Demand {i + 1}' for i in range(len(D))],
                                      index=[f'Supply {i + 1}' for i in range(len(S))])
         print(allocation_df)
+        print(f'Total cost: {total}')
     except Exception:
         pass
     print("\n")
