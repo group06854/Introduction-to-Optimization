@@ -2,6 +2,26 @@ import numpy as np
 import pandas as pd
 
 
+def north_west_approximation(S, C, D):
+    supply = S.copy()
+    cost_matrix = np.array(C)
+    demand = D.copy()
+    allocation = np.zeros_like(cost_matrix, dtype=float)
+    i_s, i_d = 0, 0
+    while i_s < len(supply) and i_d < len(demand):
+        min_val = min(supply[i_s], demand[i_d])
+        supply[i_s] -= min_val
+        demand[i_d] -= min_val
+        allocation[i_s,i_d] += min_val
+        if supply[i_s] == demand[i_d]:
+            i_s += 1
+            i_d += 1
+        elif supply[i_s] == 0:
+            i_s += 1
+        else:
+            i_d += 1
+    return allocation
+
 def check_balance(supply, demand):
     """
     Check if the transportation problem is balanced.
@@ -233,6 +253,25 @@ for n in range(1, 4):
     D = [int(j) for j in data[len(S) + 1].split()]  # Demand
 
     print(f"Input №{n}")
+
+    try:
+        print("\nNorth-West Corner Approximation:")
+        # Run the function and get the allocation matrix
+        allocation = north_west_approximation(S, C, D)
+
+        # Adjust Pandas display options to show all values
+        pd.set_option('display.max_columns', None)
+        pd.set_option('display.max_rows', None)
+        pd.set_option('display.width', 1000)
+
+        # Print the final allocation matrix
+
+        allocation_df = pd.DataFrame(allocation, columns=[f'Demand {i + 1}' for i in range(len(D))],
+                                     index=[f'Supply {i + 1}' for i in range(len(S))])
+        print(allocation_df)
+    except Exception:
+        pass
+
     try:
         print("\nVogel Approximation:")
         # Run the function and get the allocation matrix
