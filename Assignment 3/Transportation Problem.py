@@ -7,6 +7,17 @@ def north_west_approximation(S, C, D):
     cost_matrix = np.array(C)
     demand = D.copy()
     allocation = np.zeros_like(cost_matrix, dtype=float)
+
+    # Check if the method is applicable (no negative values)
+    if not check_non_negative(supply, demand, cost_matrix):
+        print("The method is not applicable due to negative values!")
+        raise Exception
+
+    # Check if the problem is balanced
+    if not check_balance(supply, demand):
+        print("The problem is not balanced!")
+        raise Exception
+
     i_s, i_d = 0, 0
     while i_s < len(supply) and i_d < len(demand):
         min_val = min(supply[i_s], demand[i_d])
