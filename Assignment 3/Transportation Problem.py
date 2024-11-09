@@ -4,12 +4,12 @@ import pandas as pd
 
 def north_west_approximation(S, C, D):
     supply = S.copy()
-    cost_matrix = np.array(C)
+    costs = C.copy()
     demand = D.copy()
-    allocation = np.zeros_like(cost_matrix, dtype=float)
+    allocation = np.zeros_like(costs, dtype=float)
 
     # Check if the method is applicable (no negative values)
-    if not check_non_negative(supply, demand, cost_matrix):
+    if not check_non_negative(supply, demand, costs):
         print("The method is not applicable due to negative values!")
         raise Exception
 
@@ -142,7 +142,7 @@ def vogel_approximation(S, C, D):
     """
     supply = S.copy()
     demand = D.copy()
-    cost_matrix = np.array(C)
+    cost_matrix = C.copy()
     allocation = np.zeros_like(cost_matrix, dtype=float)
 
     # Check if the method is applicable (no negative values)
@@ -219,7 +219,7 @@ def russel_approximation(S, C, D):
     """
     supply = S.copy()
     demand = D.copy()
-    cost_matrix = np.array(C)
+    cost_matrix = C.copy()
     allocation = np.zeros_like(cost_matrix, dtype=float)
 
     # Check if the method is applicable (no negative values)
@@ -250,33 +250,33 @@ def russel_approximation(S, C, D):
     return allocation
 
 
+
+# Adjust Pandas display options to show all values
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
+pd.set_option('display.width', 1000)
 for n in range(1, 4):
     data = open(f"tests/input{n}.txt", "r").readlines()
 
-    c = np.array([float(j) for j in data[0].split()], float)
-    A = np.array([[float(j) for j in row.split()] for row in data[1:-3]], float)
-    x = np.array([float(j) for j in data[-3].split()], float)
-    b = np.array([float(j) for j in data[-2].split()], float)
-
     # Example inputs
-    S = [int(j) for j in data[0].split()]  # Supply
-    C = [[int(i) for i in j.split()] for j in data[1:len(S) + 1]]  # Cost matrix
-    D = [int(j) for j in data[len(S) + 1].split()]  # Demand
+    S = np.array([int(j) for j in data[0].split()])  # Supply
+    C = np.array([[int(i) for i in j.split()] for j in data[1:len(S) + 1]])  # Cost matrix
+    D = np.array([int(j) for j in data[len(S) + 1].split()])  # Demand
+
 
     print(f"Input №{n}")
+    input_df = pd.DataFrame(np.r_[np.c_[C, S],
+                                  np.c_[D[:,np.newaxis].transpose(), np.nan]],
+                            index=[''] * C.shape[0] + ["Demand"],
+                            columns=[''] * C.shape[1] + ["Supply"]).fillna('')
+    print(input_df)
 
     try:
         print("\nNorth-West Corner Approximation:")
         # Run the function and get the allocation matrix
         allocation = north_west_approximation(S, C, D)
 
-        # Adjust Pandas display options to show all values
-        pd.set_option('display.max_columns', None)
-        pd.set_option('display.max_rows', None)
-        pd.set_option('display.width', 1000)
-
         # Print the final allocation matrix
-
         allocation_df = pd.DataFrame(allocation, columns=[f'Demand {i + 1}' for i in range(len(D))],
                                      index=[f'Supply {i + 1}' for i in range(len(S))])
         print(allocation_df)
@@ -288,13 +288,7 @@ for n in range(1, 4):
         # Run the function and get the allocation matrix
         allocation = vogel_approximation(S, C, D)
 
-        # Adjust Pandas display options to show all values
-        pd.set_option('display.max_columns', None)
-        pd.set_option('display.max_rows', None)
-        pd.set_option('display.width', 1000)
-
         # Print the final allocation matrix
-
         allocation_df = pd.DataFrame(allocation, columns=[f'Demand {i + 1}' for i in range(len(D))],
                                      index=[f'Supply {i + 1}' for i in range(len(S))])
         print(allocation_df)
@@ -306,13 +300,7 @@ for n in range(1, 4):
         # Run the function and get the allocation matrix
         allocation = russel_approximation(S, C, D)
 
-        # Adjust Pandas display options to show all values
-        pd.set_option('display.max_columns', None)
-        pd.set_option('display.max_rows', None)
-        pd.set_option('display.width', 1000)
-
         # Print the final allocation matrix
-
         allocation_df = pd.DataFrame(allocation, columns=[f'Demand {i + 1}' for i in range(len(D))],
                                      index=[f'Supply {i + 1}' for i in range(len(S))])
         print(allocation_df)
